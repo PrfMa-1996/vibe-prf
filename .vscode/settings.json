@@ -1,0 +1,9 @@
+﻿{
+  "python.defaultInterpreterPath": "D:\\ml\\envs\\yolo-env\\python.exe",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "eslint.validate": ["javascript"],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.python"
+  }
+}

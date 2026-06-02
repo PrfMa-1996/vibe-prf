@@ -11,6 +11,8 @@
     "github.vscode-pull-request-github",
     "ms-vscode.vscode-typescript-next",
     "streetsidesoftware.code-spell-checker",
-    "usernamehw.errorlens"
+    "usernamehw.errorlens",
+    "ms-python.python",
+    "ms-python.vscode-pylance"
   ]
 }

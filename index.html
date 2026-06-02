@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>目标检测模型可信度评估清单</title>
+    <style>
+      :root {
+        --bg: #f5f7fa;
+        --surface: #ffffff;
+        --surface-muted: #f8fafc;
+        --border: #d8dee8;
+        --text: #172033;
+        --muted: #627084;
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --success: #15803d;
+        --warning: #b7791f;
+        --star: #f59e0b;
+        --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        line-height: 1.5;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 24px 116px;
+      }
+
+      .topbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+        gap: 24px;
+        align-items: end;
+        margin-bottom: 24px;
+      }
+
+      .title-block h1 {
+        margin: 0 0 8px;
+        font-size: clamp(26px, 4vw, 40px);
+        font-weight: 760;
+        letter-spacing: 0;
+      }
+
+      .title-block p {
+        max-width: 700px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .model-field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .model-field label {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .model-field input {
+        width: 100%;
+        height: 46px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        padding: 0 14px;
+        outline: none;
+        transition:
+          border-color 160ms ease,
+          box-shadow 160ms ease;
+      }
+
+      .model-field input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+      }
+
+      .summary-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .metric {
+        min-height: 86px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 16px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 24px;
+        line-height: 1.1;
+      }
+
+      .dimensions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .dimension {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .dimension-header {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 18px 18px 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      .dimension h2 {
+        margin: 0 0 4px;
+        font-size: 18px;
+        letter-spacing: 0;
+      }
+
+      .dimension p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .stars {
+        display: inline-flex;
+        flex-shrink: 0;
+        gap: 2px;
+        padding-top: 2px;
+      }
+
+      .star {
+        width: 28px;
+        height: 28px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: #c0c7d2;
+        cursor: pointer;
+        font-size: 22px;
+        line-height: 1;
+        padding: 0;
+        transition:
+          color 140ms ease,
+          background-color 140ms ease,
+          transform 140ms ease;
+      }
+
+      .star:hover,
+      .star:focus-visible {
+        background: #fff7e6;
+        color: var(--star);
+        outline: none;
+      }
+
+      .star.active {
+        color: var(--star);
+      }
+
+      .checklist {
+        display: grid;
+        gap: 10px;
+        padding: 16px 18px 18px;
+      }
+
+      .check-item {
+        display: grid;
+        grid-template-columns: 22px minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        min-height: 44px;
+        border: 1px solid #e5e9f0;
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 11px 12px;
+      }
+
+      .check-item input {
+        width: 18px;
+        height: 18px;
+        margin: 2px 0 0;
+        accent-color: var(--primary);
+      }
+
+      .check-item span {
+        min-width: 0;
+        color: #293548;
+        font-size: 14px;
+      }
+
+      .check-item input:checked + span {
+        color: var(--success);
+        text-decoration: line-through;
+      }
+
+      .scorebar {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        border-top: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 -12px 30px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(14px);
+      }
+
+      .scorebar-inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: center;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 16px 24px;
+      }
+
+      .score-label {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: baseline;
+      }
+
+      .score-label span {
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .score-label strong {
+        font-size: 32px;
+        line-height: 1;
+      }
+
+      .progress {
+        width: min(420px, 100%);
+        height: 9px;
+        margin-top: 10px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e2e8f0;
+      }
+
+      .progress-fill {
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--warning), var(--primary));
+        transition: width 180ms ease;
+      }
+
+      .export-button {
+        min-height: 44px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--primary);
+        color: #ffffff;
+        cursor: pointer;
+        font-weight: 750;
+        padding: 0 18px;
+        transition:
+          background-color 160ms ease,
+          transform 160ms ease;
+      }
+
+      .export-button:hover,
+      .export-button:focus-visible {
+        background: var(--primary-dark);
+        outline: none;
+      }
+
+      .export-button:active {
+        transform: translateY(1px);
+      }
+
+      @media (max-width: 900px) {
+        .topbar,
+        .dimensions,
+        .summary-strip {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          padding: 22px 14px 150px;
+        }
+
+        .dimension-header,
+        .scorebar-inner {
+          grid-template-columns: 1fr;
+        }
+
+        .dimension-header {
+          display: grid;
+        }
+
+        .scorebar-inner {
+          padding: 14px;
+        }
+
+        .export-button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="topbar" aria-labelledby="page-title">
+        <div class="title-block">
+          <h1 id="page-title">目标检测模型可信度评估清单</h1>
+          <p>
+            面向企业内部模型上线前审查，覆盖准确性、鲁棒性、公平性、可解释性与安全性。
+          </p>
+        </div>
+
+        <div class="model-field">
+          <label for="model-name">被评估模型名称</label>
+          <input
+            id="model-name"
+            type="text"
+            placeholder="例如：YOLOv8-inspection-prod"
+            autocomplete="off"
+          />
+        </div>
+      </section>
+
+      <section class="summary-strip" aria-label="评估进度概览">
+        <div class="metric">
+          <span>已完成检查项</span>
+          <strong id="completed-count">0 / 15</strong>
+        </div>
+        <div class="metric">
+          <span>平均星级</span>
+          <strong id="average-stars">0.0 / 5</strong>
+        </div>
+        <div class="metric">
+          <span>评估状态</span>
+          <strong id="assessment-status">待开始</strong>
+        </div>
+      </section>
+
+      <section
+        class="dimensions"
+        id="dimensions"
+        aria-label="可信度评估维度"
+      ></section>
+    </main>
+
+    <footer class="scorebar" aria-live="polite">
+      <div class="scorebar-inner">
+        <div>
+          <div class="score-label">
+            <span>总体可信度评分</span>
+            <strong id="overall-score">0%</strong>
+          </div>
+          <div class="progress" aria-hidden="true">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+        <button class="export-button" type="button" id="export-report">
+          导出报告
+        </button>
+      </div>
+    </footer>
+
+    <script>
+      const dimensions = [
+        {
+          id: 'accuracy',
+          name: '准确性',
+          description: '验证检测结果是否达到业务可接受的精度要求。',
+          checks: [
+            '已在代表性验证集上记录 mAP、Precision、Recall 等核心指标',
+            '已按目标类别、尺寸与场景拆分分析误检和漏检',
+            '已与基线模型或上一版本模型完成指标对比',
+          ],
+        },
+        {
+          id: 'robustness',
+          name: '鲁棒性',
+          description: '评估模型在复杂输入与环境变化下的稳定程度。',
+          checks: [
+            '已覆盖光照、遮挡、模糊、低分辨率等扰动场景',
+            '已验证不同摄像头、角度、距离和背景下的表现',
+            '已记录异常输入、边界样本和分布漂移下的失败案例',
+          ],
+        },
+        {
+          id: 'fairness',
+          name: '公平性',
+          description: '检查模型是否对关键样本群体存在系统性偏差。',
+          checks: [
+            '已定义需要关注的样本群体或业务子场景',
+            '已比较不同群体之间的误检率、漏检率和置信度分布',
+            '已形成偏差缓解措施或上线后的监控方案',
+          ],
+        },
+        {
+          id: 'explainability',
+          name: '可解释性',
+          description: '确认检测判断具备足够的审查、追溯和说明能力。',
+          checks: [
+            '已抽样检查预测框、类别、置信度与人工判断的一致性',
+            '已提供典型成功和失败案例的可视化说明',
+            '已明确模型输出在业务流程中的解释口径和限制',
+          ],
+        },
+        {
+          id: 'security',
+          name: '安全性',
+          description: '识别模型、数据与部署链路中的潜在风险。',
+          checks: [
+            '已评估对抗样本、恶意遮挡或输入篡改的风险',
+            '已确认训练数据、测试数据和日志数据的合规处理方式',
+            '已设置低置信度、异常输出和服务故障的降级策略',
+          ],
+        },
+      ]
+
+      const ratings = Object.fromEntries(
+        dimensions.map((dimension) => [dimension.id, 0]),
+      )
+
+      const dimensionsRoot = document.getElementById('dimensions')
+      const modelNameInput = document.getElementById('model-name')
+      const completedCount = document.getElementById('completed-count')
+      const averageStars = document.getElementById('average-stars')
+      const assessmentStatus = document.getElementById('assessment-status')
+      const overallScore = document.getElementById('overall-score')
+      const progressFill = document.getElementById('progress-fill')
+      const exportReportButton = document.getElementById('export-report')
+
+      function renderDimensions() {
+        dimensionsRoot.innerHTML = dimensions
+          .map(
+            (dimension) => `
+              <article class="dimension" data-dimension="${dimension.id}">
+                <header class="dimension-header">
+                  <div>
+                    <h2>${dimension.name}</h2>
+                    <p>${dimension.description}</p>
+                  </div>
+                  <div class="stars" role="radiogroup" aria-label="${dimension.name}评分">
+                    ${[1, 2, 3, 4, 5]
+                      .map(
+                        (value) => `
+                          <button
+                            class="star"
+                            type="button"
+                            data-dimension="${dimension.id}"
+                            data-rating="${value}"
+                            role="radio"
+                            aria-checked="false"
+                            aria-label="${dimension.name} ${value}星"
+                          >★</button>
+                        `,
+                      )
+                      .join('')}
+                  </div>
+                </header>
+                <div class="checklist">
+                  ${dimension.checks
+                    .map(
+                      (check, index) => `
+                        <label class="check-item">
+                          <input
+                            type="checkbox"
+                            data-dimension="${dimension.id}"
+                            data-check-index="${index}"
+                          />
+                          <span>${check}</span>
+                        </label>
+                      `,
+                    )
+                    .join('')}
+                </div>
+              </article>
+            `,
+          )
+          .join('')
+      }
+
+      function getAssessmentData() {
+        const checks = Array.from(
+          document.querySelectorAll('.check-item input[type="checkbox"]'),
+        )
+        const completed = checks.filter((check) => check.checked).length
+        const totalChecks = checks.length
+        const checklistScore = totalChecks ? completed / totalChecks : 0
+        const starTotal = Object.values(ratings).reduce(
+          (sum, rating) => sum + rating,
+          0,
+        )
+        const starScore = starTotal / (dimensions.length * 5)
+        const score = Math.round((checklistScore * 0.6 + starScore * 0.4) * 100)
+
+        return {
+          completed,
+          totalChecks,
+          starTotal,
+          starAverage: starTotal / dimensions.length,
+          score,
+        }
+      }
+
+      function updateStars(dimensionId) {
+        document
+          .querySelectorAll(`.star[data-dimension="${dimensionId}"]`)
+          .forEach((star) => {
+            const value = Number(star.dataset.rating)
+            const isActive = value <= ratings[dimensionId]
+            star.classList.toggle('active', isActive)
+            star.setAttribute(
+              'aria-checked',
+              String(value === ratings[dimensionId]),
+            )
+          })
+      }
+
+      function updateSummary() {
+        const data = getAssessmentData()
+        completedCount.textContent = `${data.completed} / ${data.totalChecks}`
+        averageStars.textContent = `${data.starAverage.toFixed(1)} / 5`
+        overallScore.textContent = `${data.score}%`
+        progressFill.style.width = `${data.score}%`
+
+        if (data.score >= 85) {
+          assessmentStatus.textContent = '高可信'
+        } else if (data.score >= 65) {
+          assessmentStatus.textContent = '需复核'
+        } else if (data.score > 0) {
+          assessmentStatus.textContent = '风险较高'
+        } else {
+          assessmentStatus.textContent = '待开始'
+        }
+      }
+
+      function getDimensionSummaries() {
+        return dimensions.map((dimension) => {
+          const checks = Array.from(
+            document.querySelectorAll(
+              `.check-item input[data-dimension="${dimension.id}"]`,
+            ),
+          )
+          const completed = checks.filter((check) => check.checked).length
+
+          return {
+            ...dimension,
+            completed,
+            total: checks.length,
+            rating: ratings[dimension.id],
+          }
+        })
+      }
+
+      function exportReport() {
+        const data = getAssessmentData()
+        const modelName = modelNameInput.value.trim() || '未命名模型'
+        const reportDate = new Date().toLocaleString('zh-CN')
+        const rows = getDimensionSummaries()
+          .map(
+            (dimension) => `
+              <tr>
+                <td>${dimension.name}</td>
+                <td>${dimension.completed} / ${dimension.total}</td>
+                <td>${dimension.rating} / 5</td>
+                <td>${dimension.checks
+                  .map((check) => `<div class="check-line">${check}</div>`)
+                  .join('')}</td>
+              </tr>
+            `,
+          )
+          .join('')
+
+        const reportWindow = window.open('', '_blank', 'noopener,noreferrer')
+
+        if (!reportWindow) {
+          alert('浏览器阻止了新标签页，请允许弹出窗口后重试。')
+          return
+        }
+
+        reportWindow.document.write(`
+          <!doctype html>
+          <html lang="zh-CN">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>${modelName} - 可信度评估摘要</title>
+              <style>
+                body {
+                  margin: 0;
+                  background: #f5f7fa;
+                  color: #172033;
+                  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                  line-height: 1.5;
+                }
+                main {
+                  max-width: 980px;
+                  margin: 0 auto;
+                  padding: 36px 24px;
+                }
+                h1 {
+                  margin: 0 0 8px;
+                  font-size: 30px;
+                  letter-spacing: 0;
+                }
+                .meta {
+                  color: #627084;
+                  margin-bottom: 22px;
+                }
+                .score {
+                  display: grid;
+                  grid-template-columns: repeat(3, minmax(0, 1fr));
+                  gap: 12px;
+                  margin-bottom: 22px;
+                }
+                .metric {
+                  border: 1px solid #d8dee8;
+                  border-radius: 8px;
+                  background: #ffffff;
+                  padding: 16px;
+                }
+                .metric span {
+                  display: block;
+                  color: #627084;
+                  font-size: 13px;
+                  font-weight: 700;
+                }
+                .metric strong {
+                  display: block;
+                  margin-top: 8px;
+                  font-size: 26px;
+                }
+                table {
+                  width: 100%;
+                  border-collapse: collapse;
+                  overflow: hidden;
+                  border-radius: 8px;
+                  background: #ffffff;
+                }
+                th,
+                td {
+                  border: 1px solid #d8dee8;
+                  padding: 12px;
+                  text-align: left;
+                  vertical-align: top;
+                }
+                th {
+                  background: #eef2f7;
+                  font-size: 13px;
+                  color: #334155;
+                }
+                .check-line + .check-line {
+                  margin-top: 6px;
+                }
+                @media (max-width: 760px) {
+                  .score {
+                    grid-template-columns: 1fr;
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              <main>
+                <h1>目标检测模型可信度评估摘要</h1>
+                <div class="meta">模型：${modelName} ｜ 导出时间：${reportDate}</div>
+                <section class="score" aria-label="评分摘要">
+                  <div class="metric">
+                    <span>总体可信度评分</span>
+                    <strong>${data.score}%</strong>
+                  </div>
+                  <div class="metric">
+                    <span>已完成检查项</span>
+                    <strong>${data.completed} / ${data.totalChecks}</strong>
+                  </div>
+                  <div class="metric">
+                    <span>平均星级</span>
+                    <strong>${data.starAverage.toFixed(1)} / 5</strong>
+                  </div>
+                </section>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>评估维度</th>
+                      <th>检查完成</th>
+                      <th>星级评分</th>
+                      <th>检查项</th>
+                    </tr>
+                  </thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              </main>
+            </body>
+          </html>
+        `)
+        reportWindow.document.close()
+      }
+
+      renderDimensions()
+      updateSummary()
+
+      dimensionsRoot.addEventListener('click', (event) => {
+        const star = event.target.closest('.star')
+
+        if (!star) {
+          return
+        }
+
+        const dimensionId = star.dataset.dimension
+        const value = Number(star.dataset.rating)
+        ratings[dimensionId] = value
+        updateStars(dimensionId)
+        updateSummary()
+      })
+
+      dimensionsRoot.addEventListener('change', updateSummary)
+      exportReportButton.addEventListener('click', exportReport)
+    </script>
+  </body>
+</html>

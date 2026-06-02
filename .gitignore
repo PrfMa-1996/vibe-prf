@@ -5,3 +5,14 @@ coverage/
 .env
 .env.*
 *.log
+__pycache__/
+*.py[cod]
+result_*.jpg
+*.pt
+test*.jpg
+test*.png
+tmp*.jpg
+tmp*.png
+*.pth
+*.pkl
+*.onnx
