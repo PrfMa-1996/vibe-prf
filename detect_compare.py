@@ -13,6 +13,8 @@ from ultralytics import YOLO
 
 
 matplotlib.use("TkAgg")
+matplotlib.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "Arial Unicode MS"]
+matplotlib.rcParams["axes.unicode_minus"] = False
 
 CUP_CLASS_ID = 41
 RUNS = 3
@@ -27,7 +29,6 @@ BG = "#111827"
 PANEL_BG = "#1f2937"
 TEXT = "#e5e7eb"
 MUTED = "#9ca3af"
-ACCENT = "#38bdf8"
 BAR_COLORS = ["#38bdf8", "#22c55e", "#f59e0b"]
 
 
@@ -123,8 +124,8 @@ def build_chart(parent, rows):
     times = [row["time_ms"] for row in rows]
     bars = axis.bar(names, times, color=BAR_COLORS, width=0.55)
 
-    axis.set_title("Inference Time Comparison", color=TEXT, fontsize=13, pad=12)
-    axis.set_ylabel("ms", color=MUTED)
+    axis.set_title("推理时间对比", color=TEXT, fontsize=13, pad=12)
+    axis.set_ylabel("毫秒", color=MUTED)
     axis.tick_params(axis="x", colors=TEXT)
     axis.tick_params(axis="y", colors=MUTED)
     axis.grid(axis="y", color="#374151", linewidth=0.8, alpha=0.75)
