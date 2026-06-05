@@ -42,3 +42,6 @@
 - Do not add heavyweight frameworks to `index.html`; it is intended to remain a standalone static page.
 - Do not run destructive Git commands such as `git reset --hard` or file deletion commands unless the user explicitly asks for them.
 - Do not modify files outside the current project directory for this repository task.
+- Do not delete any comments unless the user explicitly requests it.
+- Do not make changes beyond the specific scope described in the user's request, even if other improvements are possible.
+- When in doubt about the scope of a change, ask the user before proceeding.
