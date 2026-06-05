@@ -1,3 +1,4 @@
+import os
 import time
 import tkinter as tk
 from pathlib import Path
@@ -12,7 +13,8 @@ from PIL import Image, ImageTk
 from ultralytics import YOLO
 
 
-matplotlib.use("TkAgg")
+if os.environ.get("MPLBACKEND") != "Agg":
+    matplotlib.use("TkAgg")
 matplotlib.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei", "Arial Unicode MS"]
 matplotlib.rcParams["axes.unicode_minus"] = False
 
